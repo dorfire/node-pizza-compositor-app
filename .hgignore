@@ -1,0 +1,8 @@
+syntax: glob
+.DS_Store
+typings
+bower_components
+node_modules
+.sass-cache
+.tmp
+dist

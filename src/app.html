@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta http-equiv="x-ua-compatible" content="ie=edge" />
+		<link rel="stylesheet" type="text/css" href="vendor.css" />
+		<style type="text/css">
+		li.list-group-item { border: none; }
+		ul.list-inline li:after { content: ", "; }
+		ul.list-inline li:last-child:after { content: none; }
+		</style>
+	</head>
+	<body>
+		<script type="text/x-handlebars-template" id="tpl-order-request">
+			<dt class="col-sm-3">{{name}} {{#if approx}}~{{else}}-{{/if}} {{slices}}</dt>
+			<dd class="col-sm-9"><ul class="list-inline">{{#each toppings}}<li>{{this}}</li>{{else}}<li><i>plain</i></li>{{/each}}</ul></dd>
+		</script>
+
+		<script type="text/x-handlebars-template" id="tpl-composition">
+			<form class="p-a">
+				<div class="form-group row">
+					<div class="col-sm-7">
+						<label for="name" class="col-sm-3 form-control-label">Name:</label>
+						<div class="col-sm-9">
+							<input type="text" class="form-control" id="name" value="{{name}}" />
+							<small class="text-muted">Identifies your order.</small>
+						</div>
+					</div>
+					<div class="col-sm-5">
+						<label for="slices" class="col-sm-3 form-control-label">Slices:</label>
+						<div class="col-sm-9 input-group">
+							<input type="number" min="1" class="form-control" id="slices" value="{{slices}}" />
+							<div class="input-group-addon checkbox">
+								<label><input type="checkbox" id="approx" /> ±1</label>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="form-control-label">Toppings:</label><hr class="m-y-0" />
+					<div class="p-a">
+						<ul class="list-group row" id="toppings">
+						{{#each toppingOptions}}
+							<li class="col-sm-4 list-group-item" data-id="{{this}}">
+								<label class="checkbox-inline"><input type="checkbox" value="{{this}}" /> {{this}}</label>
+								<span class="label label-default label-pill"></span>
+							</li>
+						{{/each}}
+						</ul>
+					</div>
+				</div>
+			</form>
+		</script>
+
+		<main id="app" class="container-fluid">
+			<header class="row navbar navbar-dark navbar-static-top bg-inverse">
+				<h1 class="h2">Pizza Compositor &nbsp; <small class="text-muted"></small></h1>
+			</header>
+			<div class="row m-t">
+				<div class="col-sm-6" id="region-composition">
+
+				</div>
+				<div class="col-sm-6" id="region-order">
+					<h2>Order:</h2><hr />
+					<dl class="dl-horizontal row requests"></dl>
+				</div>
+			</div>
+		</main>
+
+		<script src="vendor.js"></script>
+		<script src="app.js"></script>
+	</body>
+</html>
