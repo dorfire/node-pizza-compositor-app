@@ -2,7 +2,9 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<meta name="mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-capable" content="yes" />
 		<meta http-equiv="x-ua-compatible" content="ie=edge" />
 		<link rel="stylesheet" type="text/css" href="vendor.css" />
 		<style type="text/css">
@@ -55,7 +57,7 @@
 			</form>
 		</script>
 
-		<main id="app" class="container-fluid">
+		<div id="app" class="container-fluid">
 			<header>
 				<div class="row navbar navbar-dark navbar-static-top bg-inverse" id="title-bar">
 					<h1 class="h3 m-a-0">
@@ -72,16 +74,16 @@
 					</ul>
 				</nav>
 			</header>
-			<div class="row">
+			<main class="row">
 				<div class="col-md-6 col-sm-12 p-t" id="region-composition">
 
 				</div>
-				<div class="col-md-6 hidden-sm-down" id="region-order">
+				<div class="col-md-6 col-sm-12" id="region-order">
 					<h2 class="h4">Order Requests</h2><hr />
 					<dl class="dl-horizontal row requests"></dl>
 				</div>
-			</div>
-		</main>
+			</main>
+		</div>
 		
 		<br />
 
