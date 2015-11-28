@@ -163,7 +163,9 @@ module PizzaCompositor {
 		el = 'main#app';
 
 		ui = {
-			status: 'header h1 small'
+			titleBar: 'header #title-bar',
+			status: 'header h1 small',
+			navBar: 'header nav.navbar'
 		};
 
 		regions = {
@@ -174,21 +176,42 @@ module PizzaCompositor {
 			}
 		};
 
+		initialize()
+		{
+			$(window).on('scroll', this.onWindowScroll.bind(this));
+		}
+
 		onRender() // According to documentation, should be onShow()
 		{
 			var compView = new CompositionView({ model: new RequestModel() });
+			compView.constructor(); // Hack: binds events and ui
+			this.showChildView('composition', compView);
+
 			var orderView = new Marionette.CollectionView({
 				el: 'dl',
 				collection: this.getOption('collection'),
 				childView: OrderRequestView,
 				collectionEvents: {'change': 'render'}
 			});
-			
-			// Hack: bind events and ui
-			compView.constructor();
-
-			this.showChildView('composition', compView);
 			this.showChildView('order', orderView);
+		}
+
+		onWindowScroll(e)
+		{
+			var scrollTop = $(window).scrollTop();
+			var titleBarHeight = this.ui.titleBar.outerHeight();
+			console.log(scrollTop);
+
+			if (scrollTop > titleBarHeight)
+			{
+				this.ui.navBar.addClass('navbar-fixed-top');
+				this.ui.titleBar.css('margin-bottom', this.ui.navBar.outerHeight());
+			}
+			if (scrollTop < titleBarHeight+1)
+			{
+				this.ui.navBar.removeClass('navbar-fixed-top');
+				this.ui.titleBar.css('margin-bottom', 0);
+			}
 		}
 
 		updateStatus(status) {
@@ -215,13 +238,12 @@ module PizzaCompositor {
 		 * Establishes WebSocket link
 		 */
 		onBeforeStart(options?: any) {
-			AppLink = io.connect(options.server);
+			AppLink = io.connect(options.server, { timeout: 2000 });
+			AppLink.on('connect_timeout', (e) => { console.error('Could not connect'); });
 
 			AppLink.on('status', this.rootView.updateStatus.bind(this.rootView));
 
-			var addRequests = (reqs) => {
-				this.requestCollection.add(reqs, { merge: true });
-			};
+			var addRequests = (reqs) => { this.requestCollection.add(reqs, { merge: true }); };
 			AppLink.on('request', addRequests);
 			AppLink.on('requests', addRequests);
 		}
