@@ -160,7 +160,7 @@ module PizzaCompositor {
 	class RootView extends Marionette.LayoutView<Backbone.Model>
 	{
 		template = false;
-		el = 'main#app';
+		el = '#app';
 
 		ui = {
 			titleBar: 'header #title-bar',
