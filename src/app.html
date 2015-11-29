@@ -8,6 +8,9 @@
 		<meta http-equiv="x-ua-compatible" content="ie=edge" />
 		<link rel="stylesheet" type="text/css" href="vendor.css" />
 		<style type="text/css">
+		html, body { overflow-x: hidden; }
+		body { position: relative; }
+		main.translated > div { transition: transform 0.6s; }
 		li.list-group-item { border: none; }
 		ul.list-inline li:after { content: ", "; }
 		ul.list-inline li:last-child:after { content: none; }
@@ -18,7 +21,9 @@
 	<body>
 		<script type="text/x-handlebars-template" id="tpl-order-request">
 			<dt class="col-sm-3">{{name}} {{#if approx}}~{{else}}-{{/if}} {{slices}}</dt>
-			<dd class="col-sm-9"><ul class="list-inline">{{#each toppings}}<li>{{this}}</li>{{else}}<li><i>plain</i></li>{{/each}}</ul></dd>
+			<dd class="col-sm-9"><ul class="list-inline">
+				{{#each toppings}}<li>{{this}}</li>{{else}}<li><i>plain</i></li>{{/each}}
+			</ul></dd>
 		</script>
 
 		<script type="text/x-handlebars-template" id="tpl-composition">
@@ -69,8 +74,12 @@
 				</div>
 				<nav class="hidden-md-up row navbar navbar-light bg-faded">
 					<ul class="nav navbar-nav">
-						<li class="nav-item pull-left active"><a class="nav-link" href="#">Composition</a></li>
-						<li class="nav-item pull-right"><a class="nav-link" href="#">Order</a></li>
+						<li class="nav-item pull-left active">
+							<a class="nav-link" href="#region-composition">Composition</a>
+						</li>
+						<li class="nav-item pull-right">
+							<a class="nav-link" href="#region-order">Order</a>
+						</li>
 					</ul>
 				</nav>
 			</header>
@@ -78,7 +87,7 @@
 				<div class="col-md-6 col-sm-12 p-t" id="region-composition">
 
 				</div>
-				<div class="col-md-6 col-sm-12" id="region-order">
+				<div class="col-md-6 col-sm-12 p-t" id="region-order">
 					<h2 class="h4">Order Requests</h2><hr />
 					<dl class="dl-horizontal row requests"></dl>
 				</div>
