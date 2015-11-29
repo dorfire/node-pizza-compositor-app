@@ -1,6 +1,6 @@
 /// <reference path="../typings/tsd.d.ts" />
 import io = require('socket.io');
-import _ = require('lodash');
+import _ = require('underscore');
 var port: number = process.env.port || 1337;
 var server = io(port), ns = server.sockets;
 
@@ -39,9 +39,17 @@ ns.on('connection', function(socket)
 	socket.on('upsert', (request: IRequest) => {
 		if (request.name)
 		{
-			console.log('Upserting request:', request);
-			pizzaRequests[request.name] = request;
-			ns.emit('request', request);
+			if (request.slices > 0)
+			{
+				console.log('Upserting request:', request);
+				pizzaRequests[request.name] = request;
+				ns.emit('request', request);
+			}
+			else if (request.name in pizzaRequests)
+			{
+				delete pizzaRequests[request.name];
+				ns.emit('delete', request.name);
+			}
 		}
 	});
 });
