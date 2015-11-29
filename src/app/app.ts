@@ -107,7 +107,7 @@ module PizzaCompositor {
 			if (add && i == -1)
 				toppings.push(name);
 			else if (!add && i != -1)
-				delete toppings[i];
+				toppings.splice(i, 1);
 			this.model.set('toppings', toppings);
 
 			// Not really necessary but improves interface responsiveness:
@@ -153,7 +153,8 @@ module PizzaCompositor {
 	/**
 	 * Represents a region that already has some existing markup in place.
 	 */
-	class ExistingMarkupRegion extends Marionette.Region {
+	class ExistingMarkupRegion extends Marionette.Region
+	{
 		attachHtml() { /* no-op */ }
 	}
 
@@ -165,20 +166,29 @@ module PizzaCompositor {
 		ui = {
 			titleBar: 'header #title-bar',
 			status: 'header h1 small',
-			navBar: 'header nav.navbar'
+			navBar: 'header nav.navbar',
+			mainContainer: 'main'
 		};
+
+		events = {
+			'click nav li a': this.showRegion
+		}
 
 		regions = {
 			composition: '#region-composition',
 			order: {
-				selector: '#region-order dl',
+				selector: '#region-order',
 				regionClass: ExistingMarkupRegion
 			}
 		};
 
-		initialize()
+		navBarHidden: boolean;
+		initalizedRegionTransitions: boolean;
+		activeRegion: string;
+
+		getRegionNameByAnchor($a)
 		{
-			$(window).on('scroll', this.onWindowScroll.bind(this));
+			return $a.attr('href').split('-')[1];
 		}
 
 		onRender() // According to documentation, should be onShow()
@@ -191,16 +201,25 @@ module PizzaCompositor {
 				el: 'dl',
 				collection: this.getOption('collection'),
 				childView: OrderRequestView,
-				collectionEvents: {'change': 'render'}
+				collectionEvents: {'change': 'render'},
 			});
 			this.showChildView('order', orderView);
+
+			this.initalizedRegionTransitions = false;
+			this.onWindowResize(null);
+			$(window).on('scroll', this.onWindowScroll.bind(this));
+			$(window).on('resize', this.onWindowResize.bind(this));
 		}
 
+		/**
+		 * Make the navbar fixed or static, depending on viewport offset.
+		 */
 		onWindowScroll(e)
 		{
+			if (this.navBarHidden) return;
+
 			var scrollTop = $(window).scrollTop();
 			var titleBarHeight = this.ui.titleBar.outerHeight();
-			console.log(scrollTop);
 
 			if (scrollTop > titleBarHeight)
 			{
@@ -214,7 +233,71 @@ module PizzaCompositor {
 			}
 		}
 
-		updateStatus(status) {
+		onWindowResize(e)
+		{
+			this.navBarHidden = this.ui.navBar.is(':hidden');
+
+			if (!this.navBarHidden && !this.initalizedRegionTransitions) // If navbar was shown
+			{
+				this.activeRegion = this.getRegionNameByAnchor(this.ui.navBar.find('li.active a'));
+				this.translateRegions();
+				this.ui.mainContainer.addClass('translated');
+				this.initalizedRegionTransitions = true;
+			}
+		}
+
+		/**
+		 * Translates all regions for transitions
+		 */
+		translateRegions()
+		{
+			var regionNames = _.keys(this.regions);
+			var activeRegionIndex = regionNames.indexOf(this.activeRegion);
+
+			var outerHeights = -this.ui.navBar.outerHeight();
+			for (let i in regionNames)
+			{
+				var region = this.getRegion(regionNames[i]);
+
+				outerHeights += region.$el.outerHeight(true);
+				if (region.$el.data('offsetY') == undefined)
+				{
+					if (i > 0)
+						region.$el.data('offsetY', -outerHeights);
+					else
+						region.$el.data('offsetY', 0);
+				}
+
+				var j = i - activeRegionIndex;
+				var translations = `translateX(${100 * j}%) translateY(${region.$el.data('offsetY')}px)`;
+				region.$el.css('transform', translations);
+				region.el.offsetHeight; // Access the value to force redrawing
+			}
+		}
+
+		/**
+		 * Updates the navbar and transitions to the requested region
+		 */
+		showRegion(e)
+		{
+			var $link = $(e.target);
+
+			var newActiveRegion: string = this.getRegionNameByAnchor($link);
+			if (newActiveRegion == this.activeRegion) return; // Avoid re-translating when not needed
+
+			this.activeRegion = newActiveRegion;
+
+			this.ui.navBar.find('li').removeClass('active');
+			$link.parent('li').addClass('active');
+
+			// Re-translate regions so the selected region is translated to y=0
+			this.translateRegions();
+
+			e.preventDefault();
+		}
+
+		updateStatus(status)
+		{
 			this.$el.find('header h1 small').text(`${status.connections} connected`);
 		}
 	}
