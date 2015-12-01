@@ -237,12 +237,22 @@ module PizzaCompositor {
 		{
 			this.navBarHidden = this.ui.navBar.is(':hidden');
 
-			if (!this.navBarHidden && !this.initalizedRegionTransitions) // If navbar was shown
+			if (!this.navBarHidden && !this.initalizedRegionTransitions)
 			{
 				this.activeRegion = this.getRegionNameByAnchor(this.ui.navBar.find('li.active a'));
 				this.translateRegions();
 				this.ui.mainContainer.addClass('translated');
 				this.initalizedRegionTransitions = true;
+			}
+			else if (this.navBarHidden && this.initalizedRegionTransitions)
+			{
+				this.ui.mainContainer.removeClass('translated');
+				for (let name of _.keys(this.regions))
+				{
+					var region = this.getRegion(name);
+					region.$el.css('transform', 'none');
+				}
+				this.initalizedRegionTransitions = false;
 			}
 		}
 
