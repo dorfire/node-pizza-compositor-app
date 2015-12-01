@@ -353,4 +353,4 @@ module PizzaCompositor {
 }
 
 var App = new PizzaCompositor.App();
-App.start({ server: 'http://localhost:1337/' });
+App.start({ server: 'http://localhost:8081/' });
