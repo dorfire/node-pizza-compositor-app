@@ -33,8 +33,10 @@ module PizzaCompositor {
 	/**
 	 * Represents a pizza slice request from a single person.
 	 */
-	class RequestModel extends Backbone.Model {
-		defaults() {
+	class RequestModel extends Backbone.Model
+	{
+		defaults()
+		{
 			return {
 				name: '',
 				slices: 2,
@@ -47,7 +49,8 @@ module PizzaCompositor {
 		/**
 		 * Sends model to server, without `toppingOptions` field
 		 */
-		sync() {
+		sync()
+		{
 			var data = this.toJSON();
 			delete data.toppingOptions;
 			if (data.name) // Don't send without a name
@@ -140,13 +143,15 @@ module PizzaCompositor {
 		/**
 		 * Reset form according to bound model
 		 */
-		updateViewFields() {
+		updateViewFields()
+		{
 			this.ui.sliceInput.val(this.model.get('slices'));
 			this.ui.approxCheckbox.attr('checked', this.model.get('approx'));
 			this.$el.find('#toppings input[type=checkbox]').attr('checked', false); // TODO: loop through selected toppings
 		}
 
-		upsert() {
+		upsert()
+		{
 			console.log('upsert() due to changed attrs:', this.model.changed);
 			this.model.save();
 		}
