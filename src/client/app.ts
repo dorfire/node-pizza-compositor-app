@@ -23,6 +23,13 @@ module PizzaCompositor {
 		'Anchovies', 'Pineapple'
 	];
 
+
+	interface ILinkStatus
+	{
+		error: any;
+		connections: number;
+	}
+
 	/**
 	 * Represents a pizza slice request from a single person.
 	 */
@@ -306,9 +313,12 @@ module PizzaCompositor {
 			e.preventDefault();
 		}
 
-		updateStatus(status)
+		updateStatus(status: ILinkStatus)
 		{
-			this.$el.find('header h1 small').text(`${status.connections} connected`);
+			var $bar = this.$el.find('header h1 small');
+			if (status.error)
+				$bar.attr('class', 'text-danger').html('<em>No link</em>');
+			else $bar.attr('class', 'text-success').text(`${status.connections} connected`);
 		}
 	}
 
@@ -332,8 +342,7 @@ module PizzaCompositor {
 		 */
 		onBeforeStart(options?: any) {
 			AppLink = io.connect(options.server, { timeout: 2000 });
-			AppLink.on('connect_timeout', (e) => { console.error('Could not connect'); });
-
+			AppLink.on('connect_error', (e) => { this.rootView.updateStatus({ error: e, connections: undefined }); });
 			AppLink.on('status', this.rootView.updateStatus.bind(this.rootView));
 
 			var addRequests = (reqs) => { this.requestCollection.add(reqs, { merge: true }); };
