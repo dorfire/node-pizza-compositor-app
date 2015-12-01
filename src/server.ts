@@ -1,7 +1,7 @@
 /// <reference path="../typings/tsd.d.ts" />
 import io = require('socket.io');
 import _ = require('underscore');
-var port: number = process.env.port || 1337;
+var port: number = process.env.SOCKETIO_PORT || 8081;
 var server = io(port), ns = server.sockets;
 
 interface IRequest
@@ -12,6 +12,7 @@ interface IRequest
 	toppings: string[];
 }
 
+const MAX_PIZZA_REQUESTS = 16;
 var pizzaRequests: { [name: string]: IRequest } = {};
 
 function broadcastStatus()
@@ -39,7 +40,7 @@ ns.on('connection', function(socket)
 	socket.on('upsert', (request: IRequest) => {
 		if (request.name)
 		{
-			if (request.slices > 0)
+			if (request.slices > 0 && pizzaRequests.length < MAX_PIZZA_REQUESTS)
 			{
 				console.log('Upserting request:', request);
 				pizzaRequests[request.name] = request;
