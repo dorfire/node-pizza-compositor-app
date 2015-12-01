@@ -40,7 +40,7 @@ ns.on('connection', function(socket)
 	socket.on('upsert', (request: IRequest) => {
 		if (request.name)
 		{
-			if (request.slices > 0 && pizzaRequests.length < MAX_PIZZA_REQUESTS)
+			if (request.slices > 0 && _.keys(pizzaRequests).length <= MAX_PIZZA_REQUESTS)
 			{
 				console.log('Upserting request:', request);
 				pizzaRequests[request.name] = request;
