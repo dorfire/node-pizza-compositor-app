@@ -20,7 +20,7 @@ module PizzaCompositor {
 	const ToppingOptions: string[] = [
 		'Green Olives', 'Black Olives', 'Mushrooms', 'Onions', 'Corn', 'Peppers',
 		'Xtra Cheese', 'Mozzarella', 'Spinach', 'Tomatoes', 'Pepperoni', 'Bacon',
-		'Anchovies', 'Pineapple'
+		'Tuna', 'Anchovies', 'Pineapple'
 	];
 
 
@@ -358,4 +358,4 @@ module PizzaCompositor {
 }
 
 var App = new PizzaCompositor.App();
-App.start({ server: 'http://localhost:8081/' });
+App.start({ server: 'ws://localhost:8081/' });
