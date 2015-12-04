@@ -1,6 +1,9 @@
 var gulp = require('gulp'),
 	ts = require('gulp-typescript'),
-	concat = require('gulp-concat');
+	concat = require('gulp-concat'),
+	spawn = require('child_process').spawn;
+
+var nodeServer;
 
 const COMPONENT_PATH = './bower_components/';
 const SOURCE_PATH = './src/';
@@ -50,4 +53,17 @@ gulp.task('watch', function()
 {  
 	gulp.watch(SOURCE_PATH + '**/*.ts', ['ts']);
 	gulp.watch(SOURCE_PATH + 'client/app.html', ['copy']);
+
+	gulp.watch(DIST_PATH + 'server.js', ['server']);
+});
+
+gulp.task('server', function(cb)
+{
+	if (nodeServer) nodeServer.kill();
+	nodeServer = spawn('node', [DIST_PATH + 'server.js'], { stdio: 'inherit' });
+	nodeServer.on('close', function(code)
+	{
+		if (code === 8)
+			gulp.log('Error detected, waiting for changes...');
+	});
 });
