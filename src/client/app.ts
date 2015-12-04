@@ -13,7 +13,7 @@ module PizzaCompositor {
 	}
 
 	const Templates = {
-		Composition: compileTemplate('composition'),
+		ToppingOption: compileTemplate('toppings-li'),
 		OrderRequest: compileTemplate('order-request')
 	}
 
@@ -66,7 +66,8 @@ module PizzaCompositor {
 
 	class CompositionView extends Marionette.ItemView<RequestModel>
 	{
-		template = Templates.Composition;
+		template = false;
+		el = 'form';
 
 		ui = {
 			sliceInput: 'input#slices',
@@ -74,18 +75,7 @@ module PizzaCompositor {
 		};
 
 		events = {
-			'change input#name': (e) => {
-				var name: string = e.target.value;
-				var existingRequest = this.getOption('requestCollection').get(name);
-
-				if (existingRequest)
-					this.model = existingRequest;
-				else
-					this.model = new RequestModel({ name: name });
-
-				this.bindEntityEvents(this.model, this.getOption('modelEvents'));
-				this.updateViewFields();
-			},
+			'change input#name': this.changeRequest,
 			'change input#slices': this.onChangedSlices,
 			'change input#approx': this.onCheckedApprox,
 			'change #toppings input': this.onCheckedTopping,
@@ -94,6 +84,27 @@ module PizzaCompositor {
 		modelEvents = {
 			'change': this.upsert
 		};
+
+		onBeforeRender()
+		{
+			var toppingList = this.$el.find('ul#toppings');
+			for (let name of ToppingOptions)
+				toppingList.append(Templates.ToppingOption(name));
+		}
+
+		changeRequest(e)
+		{
+			var name: string = e.target.value;
+			var existingRequest = this.getOption('requestCollection').get(name);
+
+			if (existingRequest)
+				this.model = existingRequest;
+			else
+				this.model = new RequestModel({ name: name });
+
+			this.bindEntityEvents(this.model, this.getOption('modelEvents'));
+			this.updateViewFields();
+		}
 
 		onChangedSlices(e)
 		{
@@ -203,12 +214,11 @@ module PizzaCompositor {
 			'click nav li a': this.showRegion
 		}
 
+		regionClass = ExistingMarkupRegion;
+
 		regions = {
 			composition: '#region-composition',
-			order: {
-				selector: '#region-order',
-				regionClass: ExistingMarkupRegion
-			}
+			order: '#region-order'
 		};
 
 		navBarHidden: boolean;
@@ -344,7 +354,8 @@ module PizzaCompositor {
 		}
 	}
 
-	export class App extends Marionette.Application {
+	export class App extends Marionette.Application
+	{
 		requestCollection: RequestCollection;
 		rootView: RootView;
 
