@@ -95,7 +95,8 @@ module PizzaCompositor {
 			'change': this.upsert
 		};
 
-		onChangedSlices(e) {
+		onChangedSlices(e)
+		{
 			var sliceCount = +e.target.value;
 			this.model.set('slices', sliceCount);
 
@@ -105,11 +106,13 @@ module PizzaCompositor {
 			this.ui.approxCheckbox.attr('disabled', (sliceCount == 1));
 		}
 
-		getToppingListItemByName(name: string): JQuery {
+		getToppingListItemByName(name: string): JQuery
+		{
 			return this.$el.find(`#toppings li[data-id="${name}"]`);
 		}
 
-		onCheckedTopping(e) {
+		onCheckedTopping(e)
+		{
 			var name: string = e.target.value;
 			if (this.model.get('toppingOptions').indexOf(name) == -1)
 				throw new RangeError(`${name} not a valid topping option`);
@@ -137,7 +140,8 @@ module PizzaCompositor {
 		/**
 		 * Updates the counter pill next to a topping.
 		 */
-		updateToppingCounter($topping: JQuery, count: number): void {
+		updateToppingCounter($topping: JQuery, count: number): void
+		{
 			if (count > 0)
 				$topping.find('span.label-pill').text(count);
 		}
