@@ -75,7 +75,14 @@ module PizzaCompositor {
 
 		events = {
 			'change input#name': (e) => {
-				this.model = new RequestModel({ name: e.target.value });
+				var name: string = e.target.value;
+				var existingRequest = this.getOption('requestCollection').get(name);
+
+				if (existingRequest)
+					this.model = existingRequest;
+				else
+					this.model = new RequestModel({ name: name });
+
 				this.bindEntityEvents(this.model, this.getOption('modelEvents'));
 				this.updateViewFields();
 			},
@@ -147,7 +154,13 @@ module PizzaCompositor {
 		{
 			this.ui.sliceInput.val(this.model.get('slices'));
 			this.ui.approxCheckbox.attr('checked', this.model.get('approx'));
-			this.$el.find('#toppings input[type=checkbox]').attr('checked', false); // TODO: loop through selected toppings
+			
+			var selectedToppings = this.model.get('toppings');
+			var toppingCheckboxes = this.$el.find('#toppings input[type=checkbox]');
+			toppingCheckboxes.each(function(i: number, checkbox: HTMLInputElement)
+			{
+				checkbox.checked = (selectedToppings.indexOf(checkbox.value) != -1);
+			});
 		}
 
 		upsert()
@@ -205,7 +218,7 @@ module PizzaCompositor {
 
 		onRender() // According to documentation, should be onShow()
 		{
-			var compView = new CompositionView({ model: new RequestModel() });
+			var compView = new CompositionView({ model: new RequestModel(), requestCollection: this.getOption('collection') });
 			compView.constructor(); // Hack: binds events and ui
 			this.showChildView('composition', compView);
 
