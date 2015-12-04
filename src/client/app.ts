@@ -354,7 +354,7 @@ module PizzaCompositor {
 		}
 	}
 
-	export class App extends Marionette.Application
+	export class Application extends Marionette.Application
 	{
 		requestCollection: RequestCollection;
 		rootView: RootView;
@@ -385,5 +385,5 @@ module PizzaCompositor {
 	}
 }
 
-var App = new PizzaCompositor.App();
+var App = new PizzaCompositor.Application();
 App.start({ server: 'ws://localhost:8081/' });
