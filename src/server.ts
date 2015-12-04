@@ -1,7 +1,8 @@
 /// <reference path="../typings/tsd.d.ts" />
 import io = require('socket.io');
 import _ = require('underscore');
-var port: number = process.env.SOCKETIO_PORT || 8081;
+
+var port: number = process.env['SOCKETIO_PORT'] || 8081;
 var server = io(port), ns = server.sockets;
 
 interface IRequest
@@ -55,4 +56,4 @@ ns.on('connection', function(socket)
 	});
 });
 
-console.log(`Running socket.io server at http://localhost:${port}/`);
+console.log(`Running socket.io server at localhost:${port}`);
