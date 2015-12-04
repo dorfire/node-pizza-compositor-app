@@ -39,7 +39,7 @@ gulp.task('vendor-styles', function()
 // Compile TypeScript sources
 gulp.task('ts', function()
 {
-	const compilerConfig = {module: 'commonjs', sourceMap: true, removeComments: true};
+	const compilerConfig = {module: 'commonjs', target: 'ES5', sourceMap: true, removeComments: true};
 	gulp.src([SOURCE_PATH + 'server.ts'])    .pipe(ts(compilerConfig)).js.pipe(gulp.dest(DIST_PATH));
 	gulp.src([SOURCE_PATH + 'client/app.ts']).pipe(ts(compilerConfig)).js.pipe(gulp.dest(DIST_CLIENT_PATH));
 });
