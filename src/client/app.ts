@@ -210,7 +210,7 @@ module PizzaCompositor {
 		 */
 		strokeCircleRadius(cx: number, cy: number, r: number, a: number)
 		{
-			console.debug('strokeCircleRadius(', cx, cy, r, a, ')');
+			console.debug('strokeCircleRadius(', cx, cy, r, a, ') with styles', this.ctx.strokeStyle, this.ctx.lineWidth);
 			this.ctx.beginPath();
 			this.ctx.moveTo(cx, cy);
 			this.ctx.lineTo(cx + r * Math.cos(a), cy + r * Math.sin(a));
@@ -245,21 +245,18 @@ module PizzaCompositor {
 
 			this.strokeCircle(cx, p, r, 3);
 
-			var strokeWidth = 2;
-			var innerR = r - strokeWidth;
-			
+			this.ctx.lineWidth = 2;
 			this.ctx.fillStyle = 'LightGray';
+			var innerR = r - this.ctx.lineWidth;
 
 			for (var j = 1; j <= slicesInPie; ++j)
 			{
-				this.ctx.lineWidth = strokeWidth;
+				this.fillCircleSlice(cx, p, innerR, (j - 1) * this.sliceAngle, j * this.sliceAngle);
 
 				if (j == 1)
 					this.strokeCircleRadius(cx, p, innerR, 0);
-
-				this.strokeCircleRadius(cx, p, innerR, j * this.sliceAngle);
-
-				this.fillCircleSlice(cx, p, innerR, (j - 1) * this.sliceAngle, j * this.sliceAngle);
+				if (j != SLICES_IN_PIE)
+					this.strokeCircleRadius(cx, p, innerR, j * this.sliceAngle);
 			}
 		}
 
