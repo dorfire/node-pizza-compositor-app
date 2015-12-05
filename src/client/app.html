@@ -16,6 +16,7 @@
 		ul.list-inline li:last-child:after { content: none; }
 		nav.navbar { text-transform: uppercase; }
 		nav.navbar-fixed-top ul { padding: 0 1rem; }
+		canvas { border:1px solid #d3d3d3; }
 		</style>
 	</head>
 	<body>
@@ -84,8 +85,12 @@
 					</form>
 				</section>
 				<section class="col-md-6 col-sm-12 p-t" id="region-order">
-					<h2 class="h4">Order Requests</h2><hr />
-					<dl class="dl-horizontal row requests"></dl>
+					<!-- style:100% helps diminish pre-rendering size change -->
+					<canvas id="region-pizza" style="width:100%;" height="160"></canvas>
+					<div id="region-requests">
+						<h2 class="h4">Order Requests</h2><hr />
+						<dl class="dl-horizontal row"></dl>
+					</div>
 				</section>
 			</main>
 		</div>

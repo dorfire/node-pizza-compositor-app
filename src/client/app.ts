@@ -1,6 +1,7 @@
 /// <reference path="../../typings/tsd.d.ts" />
 
 module PizzaCompositor {
+	const SLICES_IN_PIE = 8;
 	/**
 	 * Module globals
 	 */
@@ -59,9 +60,15 @@ module PizzaCompositor {
 	}
 	RequestModel.prototype.idAttribute = 'name';
 
+
 	class RequestCollection extends Backbone.Collection<RequestModel>
 	{
 		model = RequestModel;
+
+		getSliceCount(): number
+		{
+			return this.reduce((memo, req: RequestModel, i) => { return memo + req.get('slices'); }, 0);
+		}
 	}
 
 	class CompositionView extends Marionette.ItemView<RequestModel>
@@ -185,6 +192,112 @@ module PizzaCompositor {
 		}
 	}
 
+	class PizzaView extends Marionette.ItemView<Backbone.Model>
+	{
+		template = false;
+
+		collection: RequestCollection;
+		ctx: CanvasRenderingContext2D;
+		padding: number = 10;
+		sliceAngle: number = 2 * Math.PI / SLICES_IN_PIE;
+
+		/**
+		 * @param {number} cx		line origin X
+		 * @param {number} cy		line origin Y
+		 * @param {number} r		circle radius
+		 * @param {number} a		line angle
+		 * @param {boolean} fill	should the slice be filled with color
+		 */
+		strokeCircleRadius(cx: number, cy: number, r: number, a: number)
+		{
+			console.debug('strokeCircleRadius(', cx, cy, r, a, ')');
+			this.ctx.beginPath();
+			this.ctx.moveTo(cx, cy);
+			this.ctx.lineTo(cx + r * Math.cos(a), cy + r * Math.sin(a));
+			this.ctx.stroke();
+			this.ctx.closePath();
+		}
+
+		fillCircleSlice(cx: number, cy: number, r: number, a1: number, a2: number)
+		{
+			this.ctx.beginPath();
+			this.ctx.moveTo(cx, cy);
+			this.ctx.arc(cx, cy, r, a1, a2);
+			this.ctx.fill();
+			this.ctx.closePath();
+		}
+
+		strokeCircle(cx: number, cy: number, r: number, lineWidth: number)
+		{
+			this.ctx.beginPath();
+			this.ctx.arc(cx, cy, r, 0, 2 * Math.PI);
+			this.ctx.lineWidth = lineWidth;
+			this.ctx.stroke();
+			this.ctx.closePath();
+		}
+
+		drawPie(i: number, slicesInPie: number)
+		{
+			var r = (this.el.height / 2) * 0.9 - 1;
+			var p = this.padding + r;
+			var cx = p + i*2*p;
+			console.debug(cx, p, r, slicesInPie);
+
+			this.strokeCircle(cx, p, r, 3);
+
+			var strokeWidth = 2;
+			var innerR = r - strokeWidth;
+			
+			this.ctx.fillStyle = 'LightGray';
+
+			for (var j = 1; j <= slicesInPie; ++j)
+			{
+				this.ctx.lineWidth = strokeWidth;
+
+				if (j == 1)
+					this.strokeCircleRadius(cx, p, innerR, 0);
+
+				this.strokeCircleRadius(cx, p, innerR, j * this.sliceAngle);
+
+				this.fillCircleSlice(cx, p, innerR, (j - 1) * this.sliceAngle, j * this.sliceAngle);
+			}
+		}
+
+		drawPies()
+		{
+			console.log('drawPies()');
+
+			var slices = this.collection.getSliceCount();
+			var pies = slices / SLICES_IN_PIE, slicesInLastPie = slices % SLICES_IN_PIE;
+			if (slicesInLastPie == 0) slicesInLastPie = SLICES_IN_PIE;
+
+			this.resetCanvas();
+			for (let i = 0; i < pies; ++i)
+			{
+				console.log('draw', i);
+				this.drawPie(i, (pies > 1 && i < pies-1) ? SLICES_IN_PIE : slicesInLastPie);
+			}
+		}
+
+		resetCanvas()
+		{
+			this.ctx.clearRect(0, 0, this.el.width, this.el.height);
+		}
+
+		onShow()
+		{
+			this.ctx = this.el.getContext('2d');
+			this.onWindowResize(null);
+			$(window).on('resize', this.onWindowResize.bind(this));
+		}
+
+		onWindowResize(e)
+		{
+			this.el.width = this.$el.parent().width();
+			this.drawPies();
+		}
+	}
+
 	class OrderRequestView extends Marionette.ItemView<RequestModel>
 	{
 		template = Templates.OrderRequest;
@@ -196,6 +309,38 @@ module PizzaCompositor {
 	class ExistingMarkupRegion extends Marionette.Region
 	{
 		attachHtml() { /* no-op */ }
+	}
+
+	class OrderView extends Marionette.LayoutView<Backbone.Model>
+	{
+		template = false;
+
+		regionClass = ExistingMarkupRegion;
+		regions = {
+			pizza: '#region-pizza',
+			requests: '#region-requests'
+		};
+
+		onShow()
+		{
+			var requestCollection: RequestCollection = this.getOption('collection');
+
+			var requestCollectionView = new Marionette.CollectionView({
+				el: 'dl',
+				collection: requestCollection,
+				childView: OrderRequestView,
+				collectionEvents: { 'change': 'render' },
+			});
+			this.showChildView('requests', requestCollectionView);
+
+			// var pizza = new Backbone.Model({ pies: requestCollection.getSliceCount() / SLICES_IN_PIE });
+			var pizzaView = new PizzaView({
+				el: this.getRegion('pizza').el,
+				collection: requestCollection,
+				collectionEvents: { 'change': 'drawPies' }
+			});
+			this.showChildView('pizza', pizzaView);
+		}
 	}
 
 	class RootView extends Marionette.LayoutView<Backbone.Model>
@@ -215,7 +360,6 @@ module PizzaCompositor {
 		}
 
 		regionClass = ExistingMarkupRegion;
-
 		regions = {
 			composition: '#region-composition',
 			order: '#region-order'
@@ -236,12 +380,8 @@ module PizzaCompositor {
 			compView.constructor(); // Hack: binds events and ui
 			this.showChildView('composition', compView);
 
-			var orderView = new Marionette.CollectionView({
-				el: 'dl',
-				collection: this.getOption('collection'),
-				childView: OrderRequestView,
-				collectionEvents: {'change': 'render'},
-			});
+			var orderView = new OrderView({ el: this.getRegion('order').el, collection: this.getOption('collection') });
+			orderView.constructor(); // Hack: binds regions
 			this.showChildView('order', orderView);
 
 			this.initalizedRegionTransitions = false;
@@ -359,7 +499,8 @@ module PizzaCompositor {
 		requestCollection: RequestCollection;
 		rootView: RootView;
 
-		constructor(options?: any) {
+		constructor(options?: any)
+		{
 			if (!options) options = {};
 			super(options);
 
@@ -373,7 +514,8 @@ module PizzaCompositor {
 		/**
 		 * Establishes WebSocket link
 		 */
-		onBeforeStart(options?: any) {
+		onBeforeStart(options?: any)
+		{
 			AppLink = io.connect(options.server, { timeout: 2000 });
 			AppLink.on('connect_error', (e) => { this.rootView.updateStatus({ error: e, connections: undefined }); });
 			AppLink.on('status', this.rootView.updateStatus.bind(this.rootView));
