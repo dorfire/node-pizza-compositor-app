@@ -27,7 +27,7 @@ gulp.task('vendor-scripts', function()
 	stream.pipe(gulp.dest(DIST_CLIENT_PATH));
 });
 
-gulp.task('vendor-styles', function()
+gulp.task('vendor-styles', function() // TODO: compile Bootstrap SASS
 {
 	stream = gulp.src([
 		COMPONENT_PATH + 'bootstrap/dist/css/bootstrap.min.css',
