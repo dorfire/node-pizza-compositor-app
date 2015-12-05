@@ -210,7 +210,6 @@ module PizzaCompositor {
 		 */
 		strokeCircleRadius(cx: number, cy: number, r: number, a: number)
 		{
-			console.debug('strokeCircleRadius(', cx, cy, r, a, ') with styles', this.ctx.strokeStyle, this.ctx.lineWidth);
 			this.ctx.beginPath();
 			this.ctx.moveTo(cx, cy);
 			this.ctx.lineTo(cx + r * Math.cos(a), cy + r * Math.sin(a));
@@ -265,13 +264,15 @@ module PizzaCompositor {
 			console.log('drawPies()');
 
 			var slices = this.collection.getSliceCount();
-			var pies = slices / SLICES_IN_PIE, slicesInLastPie = slices % SLICES_IN_PIE;
-			if (slicesInLastPie == 0) slicesInLastPie = SLICES_IN_PIE;
+			var pies = slices / SLICES_IN_PIE;
+
+			var slicesInLastPie = slices % SLICES_IN_PIE;
+			if (slicesInLastPie == 0)
+				slicesInLastPie = SLICES_IN_PIE;
 
 			this.resetCanvas();
 			for (let i = 0; i < pies; ++i)
 			{
-				console.log('draw', i);
 				this.drawPie(i, (pies > 1 && i < pies-1) ? SLICES_IN_PIE : slicesInLastPie);
 			}
 		}
@@ -440,22 +441,19 @@ module PizzaCompositor {
 			var regionNames = _.keys(this.regions);
 			var activeRegionIndex = regionNames.indexOf(this.activeRegion);
 
-			var outerHeights = -this.ui.navBar.outerHeight();
+			var offsetTop = 0;
 			for (let i in regionNames)
 			{
 				var region = this.getRegion(regionNames[i]);
 
-				outerHeights += region.$el.outerHeight(true);
-				if (region.$el.data('offsetY') == undefined)
+				if (_.isUndefined(region.$el.data('offsetY')))
 				{
-					if (i > 0)
-						region.$el.data('offsetY', -outerHeights);
-					else
-						region.$el.data('offsetY', 0);
+					region.$el.data('offsetY', -offsetTop);
+					offsetTop += region.$el.outerHeight();
 				}
-
-				var j = i - activeRegionIndex;
-				var translations = `translateX(${100 * j}%) translateY(${region.$el.data('offsetY')}px)`;
+				
+				var iRevesed = i - activeRegionIndex;
+				var translations = `translateX(${100 * iRevesed}%) translateY(${region.$el.data('offsetY')}px)`;
 				region.$el.css('transform', translations);
 				region.el.offsetHeight; // Access the value to force redrawing
 			}
@@ -466,8 +464,9 @@ module PizzaCompositor {
 		 */
 		showRegion(e)
 		{
-			var $link = $(e.target);
+			e.preventDefault();
 
+			var $link = $(e.target);
 			var newActiveRegion: string = this.getRegionNameByAnchor($link);
 			if (newActiveRegion == this.activeRegion) return; // Avoid re-translating when not needed
 
@@ -478,8 +477,6 @@ module PizzaCompositor {
 
 			// Re-translate regions so the selected region is translated to y=0
 			this.translateRegions();
-
-			e.preventDefault();
 		}
 
 		updateStatus(status: ILinkStatus)
