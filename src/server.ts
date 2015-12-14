@@ -14,6 +14,8 @@ interface IRequest
 }
 
 const MAX_PIZZA_REQUESTS = 16;
+const MAX_SLICES_IN_REQUEST = 16;
+
 var pizzaRequests: { [name: string]: IRequest } = {};
 
 function broadcastStatus()
@@ -38,22 +40,22 @@ ns.on('connection', function(socket)
 		else broadcastStatus();
 	});
 
-	socket.on('upsert', (request: IRequest) => {
-		if (request.name)
+	socket.on('upsert', (request: IRequest) => { if (request.name)
+	{
+		if (request.slices > 0 && _.keys(pizzaRequests).length <= MAX_PIZZA_REQUESTS) // Upsert a new request
 		{
-			if (request.slices > 0 && _.keys(pizzaRequests).length <= MAX_PIZZA_REQUESTS)
-			{
-				console.log('Upserting request:', request);
-				pizzaRequests[request.name] = request;
-				ns.emit('request', request);
-			}
-			else if (request.name in pizzaRequests)
-			{
-				delete pizzaRequests[request.name];
-				ns.emit('delete', request.name);
-			}
+			console.log('Upserting request:', request);
+			if (request.slices > MAX_SLICES_IN_REQUEST)
+				request.slices = MAX_SLICES_IN_REQUEST;
+			pizzaRequests[request.name] = request;
+			ns.emit('request', request);
 		}
-	});
+		else if (request.name in pizzaRequests) // Delete an existing request
+		{
+			delete pizzaRequests[request.name];
+			ns.emit('delete', request.name);
+		}
+	}});
 });
 
 console.log(`Running socket.io server at localhost:${port}`);
