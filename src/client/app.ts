@@ -2,10 +2,18 @@
 
 module PizzaCompositor {
 	const SLICES_IN_PIE = 8;
+
+	// TODO: should have 16 colors
+	const REQUEST_COLORS = [
+		'#4A9586', '#B96F6F', '#FF800D', '#1FCB4A',
+		'#6A6AFF', '#23819C', '#FF62B0', '#FF5353'
+	];
+
 	/**
 	 * Module globals
 	 */
 	var AppLink: SocketIOClient.Socket;
+
 
 	function compileTemplate(name: string) {
 		var tplSrc = document.getElementById('tpl-' + name).textContent;
@@ -53,7 +61,10 @@ module PizzaCompositor {
 		sync()
 		{
 			var data = this.toJSON();
+			
 			delete data.toppingOptions;
+			delete data.color;
+
 			if (data.name) // Don't send without a name
 				AppLink.emit('upsert', data);
 		}
@@ -217,11 +228,12 @@ module PizzaCompositor {
 			this.ctx.closePath();
 		}
 
-		fillCircleSlice(cx: number, cy: number, r: number, a1: number, a2: number)
+		fillCircleSlice(cx: number, cy: number, r: number, a1: number, a2: number, style: string)
 		{
 			this.ctx.beginPath();
 			this.ctx.moveTo(cx, cy);
 			this.ctx.arc(cx, cy, r, a1, a2);
+			this.ctx.fillStyle = style;
 			this.ctx.fill();
 			this.ctx.closePath();
 		}
@@ -235,6 +247,17 @@ module PizzaCompositor {
 			this.ctx.closePath();
 		}
 
+		private currentRequestIndex: number;
+		private currentRequest: RequestModel;
+		private currentRequestSlices: number;
+
+		private nextRequest()
+		{
+			this.currentRequest = this.collection.at(++this.currentRequestIndex);
+			if (this.currentRequest)
+				this.currentRequestSlices = this.currentRequest.get('slices');
+		}
+
 		drawPie(i: number, slicesInPie: number)
 		{
 			var r = (this.el.height / 2) * 0.9 - 1;
@@ -245,30 +268,34 @@ module PizzaCompositor {
 			this.strokeCircle(cx, p, r, 3);
 
 			this.ctx.lineWidth = 2;
-			this.ctx.fillStyle = 'LightGray';
 			var innerR = r - this.ctx.lineWidth;
 
 			for (var j = 1; j <= slicesInPie; ++j)
 			{
-				this.fillCircleSlice(cx, p, innerR, (j - 1) * this.sliceAngle, j * this.sliceAngle);
+				this.fillCircleSlice(cx, p, innerR, (j - 1) * this.sliceAngle, j * this.sliceAngle, this.currentRequest.get('color'));
+				--this.currentRequestSlices;
 
 				if (j == 1)
 					this.strokeCircleRadius(cx, p, innerR, 0);
 				if (j != SLICES_IN_PIE)
 					this.strokeCircleRadius(cx, p, innerR, j * this.sliceAngle);
+
+				if (this.currentRequestSlices == 0)
+					this.nextRequest();
 			}
 		}
 
 		drawPies()
 		{
-			console.log('drawPies()');
-
 			var slices = this.collection.getSliceCount();
 			var pies = slices / SLICES_IN_PIE;
 
 			var slicesInLastPie = slices % SLICES_IN_PIE;
 			if (slicesInLastPie == 0)
 				slicesInLastPie = SLICES_IN_PIE;
+
+			this.currentRequestIndex = -1;
+			this.nextRequest();
 
 			this.resetCanvas();
 			for (let i = 0; i < pies; ++i)
@@ -319,6 +346,10 @@ module PizzaCompositor {
 			requests: '#region-requests'
 		};
 
+		collectionEvents = {
+			'add': this.onRequestAdded
+		}
+
 		onShow()
 		{
 			var requestCollection: RequestCollection = this.getOption('collection');
@@ -331,13 +362,20 @@ module PizzaCompositor {
 			});
 			this.showChildView('requests', requestCollectionView);
 
-			// var pizza = new Backbone.Model({ pies: requestCollection.getSliceCount() / SLICES_IN_PIE });
 			var pizzaView = new PizzaView({
 				el: this.getRegion('pizza').el,
 				collection: requestCollection,
 				collectionEvents: { 'change': 'drawPies' }
 			});
 			this.showChildView('pizza', pizzaView);
+		}
+
+		onRequestAdded(req: RequestModel)
+		{
+			// Silent so the request won't be rendered twice
+			req.set('color', REQUEST_COLORS[this.collection.indexOf(req)], { silent: true });
+			// change:collection won't be triggered, so initiate pie drawing manually 
+			this.getRegion('pizza').currentView.drawPies();
 		}
 	}
 
@@ -379,7 +417,7 @@ module PizzaCompositor {
 			this.showChildView('composition', compView);
 
 			var orderView = new OrderView({ el: this.getRegion('order').el, collection: this.getOption('collection') });
-			orderView.constructor(); // Hack: binds regions
+			orderView.constructor(); // Hack: binds events and regions
 			this.showChildView('order', orderView);
 
 			this.initalizedRegionTransitions = false;
