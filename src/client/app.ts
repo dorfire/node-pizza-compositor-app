@@ -99,9 +99,7 @@ module PizzaCompositor {
 			'change #toppings input': this.onCheckedTopping,
 		};
 
-		modelEvents = {
-			'change': this.upsert
-		};
+		modelEvents = { change: this.upsert };
 
 		onBeforeRender()
 		{
