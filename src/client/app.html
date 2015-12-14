@@ -22,7 +22,7 @@
 	</head>
 	<body>
 		<script type="text/x-handlebars-template" id="tpl-order-request">
-			<dt class="col-sm-3">{{name}} {{#if approx}}~{{else}}-{{/if}} {{slices}}</dt>
+			<dt class="col-sm-3" style="color:{{color}};">{{name}} {{#if approx}}~{{else}}-{{/if}} {{slices}}</dt>
 			<dd class="col-sm-9"><ul class="list-inline">
 				{{#each toppings}}<li>{{this}}</li>{{else}}<li><i>plain</i></li>{{/each}}
 			</ul></dd>
