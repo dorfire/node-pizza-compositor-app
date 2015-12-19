@@ -203,7 +203,10 @@ module PizzaCompositor {
 		template = false;
 
 		collection: RequestCollection;
+		initialHeight: number;
 		ctx: CanvasRenderingContext2D;
+		pieRadius: number = 71;
+		piesPerLine: number;
 		padding: number = 10;
 		sliceAngle: number = 2 * Math.PI / SLICES_IN_PIE;
 
@@ -255,25 +258,28 @@ module PizzaCompositor {
 
 		drawPie(i: number, slicesInPie: number)
 		{
-			var r = (this.el.height / 2) * 0.9 - 1;
-			var p = this.padding + r;
-			var cx = p + i*2*p;
-			console.debug(cx, p, r, slicesInPie);
+			var line0 = Math.ceil((i+1) / this.piesPerLine) - 1;
+			var lineHeight = this.padding + 2 * this.pieRadius;
 
-			this.strokeCircle(cx, p, r, 3);
+			var p = this.padding + this.pieRadius;
+			var cx = p + (i % this.piesPerLine) * 2 * p;
+			var cy = line0 * lineHeight + p;
+
+			console.debug('Pie:', line0, cx, p, this.pieRadius, slicesInPie);
+
+			this.strokeCircle(cx, cy, this.pieRadius, 3);
 
 			this.ctx.lineWidth = 2;
-			var innerR = r - this.ctx.lineWidth;
+			var innerR = this.pieRadius - this.ctx.lineWidth;
 
-			for (var j = 1; j <= slicesInPie; ++j)
-			{
-				this.fillCircleSlice(cx, p, innerR, (j - 1) * this.sliceAngle, j * this.sliceAngle, this.currentRequest.get('color'));
+			for (var j = 1; j <= slicesInPie; ++j) {
+				this.fillCircleSlice(cx, cy, innerR, (j - 1) * this.sliceAngle, j * this.sliceAngle, this.currentRequest.get('color'));
 				--this.currentRequestSlices;
 
 				if (j == 1)
-					this.strokeCircleRadius(cx, p, innerR, 0);
+					this.strokeCircleRadius(cx, cy, innerR, 0);
 				if (j != SLICES_IN_PIE)
-					this.strokeCircleRadius(cx, p, innerR, j * this.sliceAngle);
+					this.strokeCircleRadius(cx, cy, innerR, j * this.sliceAngle);
 
 				if (this.currentRequestSlices == 0)
 					this.nextRequest();
@@ -284,6 +290,9 @@ module PizzaCompositor {
 		{
 			var slices = this.collection.getSliceCount();
 			var pies = slices / SLICES_IN_PIE;
+
+			var pieLines = Math.ceil(pies / this.piesPerLine);
+			if (pieLines > 0) this.el.height = this.initialHeight * pieLines;
 
 			var slicesInLastPie = slices % SLICES_IN_PIE;
 			if (slicesInLastPie == 0)
@@ -306,6 +315,7 @@ module PizzaCompositor {
 
 		onShow()
 		{
+			this.initialHeight = this.el.height;
 			this.ctx = this.el.getContext('2d');
 			this.onWindowResize(null);
 			$(window).on('resize', this.onWindowResize.bind(this));
@@ -314,6 +324,7 @@ module PizzaCompositor {
 		onWindowResize(e)
 		{
 			this.el.width = this.$el.parent().width();
+			this.piesPerLine = Math.floor(this.el.width / (2 * this.pieRadius + this.padding));
 			this.drawPies();
 		}
 	}
