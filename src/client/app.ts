@@ -3,12 +3,6 @@
 module PizzaCompositor {
 	const SLICES_IN_PIE = 8;
 
-	// TODO: should have 16 colors
-	const REQUEST_COLORS = [
-		'#4A9586', '#B96F6F', '#FF800D', '#1FCB4A',
-		'#6A6AFF', '#23819C', '#FF62B0', '#FF5353'
-	];
-
 	/**
 	 * Module globals
 	 */
@@ -346,7 +340,12 @@ module PizzaCompositor {
 
 		collectionEvents = {
 			'add': this.onRequestAdded
-		}
+		};
+
+		static REQUEST_COLORS = [
+			'#4A9586', '#B96F6F', '#FF800D', '#1FCB4A',
+			'#6A6AFF', '#23819C', '#FF62B0', '#FF5353'
+		];
 
 		onShow()
 		{
@@ -371,7 +370,7 @@ module PizzaCompositor {
 		onRequestAdded(req: RequestModel)
 		{
 			// Silent so the request won't be rendered twice
-			req.set('color', REQUEST_COLORS[this.collection.indexOf(req)], { silent: true });
+			req.set('color', OrderView.REQUEST_COLORS[this.collection.indexOf(req)], { silent: true });
 			// change:collection won't be triggered, so initiate pie drawing manually 
 			this.getRegion('pizza').currentView.drawPies();
 		}
