@@ -205,7 +205,7 @@ module PizzaCompositor {
 		collection: RequestCollection;
 		initialHeight: number;
 		ctx: CanvasRenderingContext2D;
-		pieRadius: number = 71;
+		pieRadius: number;
 		piesPerLine: number;
 		padding: number = 10;
 		sliceAngle: number = 2 * Math.PI / SLICES_IN_PIE;
@@ -316,7 +316,9 @@ module PizzaCompositor {
 		onShow()
 		{
 			this.initialHeight = this.el.height;
+			this.pieRadius = (this.initialHeight / 2) * 0.9 - 1;
 			this.ctx = this.el.getContext('2d');
+			
 			this.onWindowResize(null);
 			$(window).on('resize', this.onWindowResize.bind(this));
 		}
