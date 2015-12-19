@@ -393,7 +393,10 @@ module PizzaCompositor {
 
 		events = {
 			'click nav li a': this.showRegion
-		}
+		};
+		collectionEvents = {
+			'change': this.updateNavBar
+		};
 
 		regionClass = ExistingMarkupRegion;
 		regions = {
@@ -412,11 +415,11 @@ module PizzaCompositor {
 
 		onRender() // According to documentation, should be onShow()
 		{
-			var compView = new CompositionView({ model: new RequestModel(), requestCollection: this.getOption('collection') });
+			var compView = new CompositionView({ model: new RequestModel(), requestCollection: this.collection });
 			compView.constructor(); // Hack: binds events and ui
 			this.showChildView('composition', compView);
 
-			var orderView = new OrderView({ el: this.getRegion('order').el, collection: this.getOption('collection') });
+			var orderView = new OrderView({ el: this.getRegion('order').el, collection: this.collection });
 			orderView.constructor(); // Hack: binds events and regions
 			this.showChildView('order', orderView);
 
@@ -515,6 +518,19 @@ module PizzaCompositor {
 
 			// Re-translate regions so the selected region is translated to y=0
 			this.translateRegions();
+		}
+
+		updateNavBar(e)
+		{
+			var pill = this.ui.navBar.find('sup.label');
+			var pillText = pill.text();
+
+			if (this.collection.length.toString() != pillText)
+			{
+				if (pillText == '') pill.fadeTo(0, 0);
+				else pill.fadeTo(100, 0.4);
+				pill.text(this.collection.length).fadeTo(500, 1.0);
+			}
 		}
 
 		updateStatus(status: ILinkStatus)
