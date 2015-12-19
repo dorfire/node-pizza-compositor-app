@@ -110,7 +110,10 @@ module PizzaCompositor {
 			if (existingRequest)
 				this.model = existingRequest;
 			else
+			{
 				this.model = new RequestModel({ name: name });
+				this.upsert();
+			}
 
 			this.bindEntityEvents(this.model, this.getOption('modelEvents'));
 			this.updateViewFields();
